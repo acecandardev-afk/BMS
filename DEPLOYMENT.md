@@ -95,4 +95,16 @@ This repo includes **`vercel.json`**, **`api/index.php`** (forwards to `public/i
 
 PHP runtime: **[vercel-community/php](https://github.com/vercel-community/php)** (`vercel-php@0.7.4` in `vercel.json`). If a deploy fails routing, check Vercel’s build logs; older projects sometimes need the **routes** block adjusted.
 
+**HTTP 500 after the site loads (no Deployment Protection):** The app defaults in `.env` use **`SESSION_DRIVER=database`** and **`CACHE_STORE=database`**, which **require a working database**. On Vercel, **SQLite usually fails** (read-only filesystem). **`vercel.json`** now sets **`SESSION_DRIVER=cookie`**, **`CACHE_STORE=array`**, **`QUEUE_CONNECTION=sync`**, **`LOG_CHANNEL=stderr`**, and **`/tmp`** paths for compiled views/config caches — but you **must** still add these in **Vercel → Settings → Environment Variables**:
+
+| Required | Example |
+|----------|---------|
+| `APP_KEY` | Output of `php artisan key:generate --show` (32-byte base64) |
+| `APP_URL` | `https://bms-vert.vercel.app` (your real hostname) |
+| `APP_ENV` | `production` |
+| `APP_DEBUG` | `false` (set `true` briefly only to read an error, then turn off) |
+| Database | `DB_CONNECTION=pgsql` and `DATABASE_URL=postgresql://...` (Supabase **Connection string**, **Session** or **Transaction** pooler), **or** individual `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` |
+
+Run **`php artisan migrate --force`** against that database once (from your machine with `DATABASE_URL`, or via a one-off script). Then open **`/up`** — if it returns **200**, Laravel boots; if **500**, check **Vercel → Deployment → Logs** (Function / Runtime) for the stack trace.
+
 If you prefer fewer constraints, host the full app on **Fly.io / Railway / Render** with Docker (above) instead.
