@@ -3,7 +3,7 @@
   "version": 2,
   "framework": null,
   "installCommand": "npm ci",
-  "buildCommand": "(composer install --no-dev --optimize-autoloader --no-interaction || (curl -sS https://getcomposer.org/installer | php && php composer.phar install --no-dev --optimize-autoloader --no-interaction)) && npm run build",
+  "buildCommand": "npm run build",
   "outputDirectory": "public",
   "functions": {
     "api/index.php": {
