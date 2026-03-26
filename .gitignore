@@ -1,0 +1,38 @@
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+/.fleet
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+Homestead.json
+Homestead.yaml
+Thumbs.db
+
+# Local SQLite (never commit real data)
+/database/*.sqlite
+/database/*.sqlite-journal
+
+# Secrets & keys
+*.pem
+*.p12
+
+# OS / tooling
+*.swp
+*.swo
