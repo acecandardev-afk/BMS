@@ -74,6 +74,8 @@ This repo includes **`vercel.json`**, **`api/index.php`** (forwards to `public/i
 
 **In the Vercel dashboard**, set **Output Directory** to `public` (or rely on `vercel.json` — it should match). Clear any old setting that expected **`dist`** (that was causing “No Output Directory named dist”).
 
+**“Authenticated” then the browser downloads a file:** Vercel **Deployment Protection** shows the login screen first; that is normal if protection is enabled. If the **next** page **downloads** instead of showing HTML, the usual cause was **`routes` with `{ "handle": "filesystem" }`**: Vercel then serves `public/index.php` as a **static file**, so PHP is not executed. This repo uses **explicit** routes for `/build/*` and static files, then sends everything else to **`/api/index.php`** so Laravel runs. To remove the extra “Authenticated” step for public visitors, open **Project → Settings → Deployment Protection** and adjust (e.g. disable for Production or only protect Preview).
+
 **Why `npm run build` only (no `composer` in `buildCommand`):** Vercel’s **Node** install/build steps do **not** have `composer` or `php` on `PATH`, so any shell command that calls them returns **exit 127**. The **[vercel-php](https://github.com/vercel-community/php)** runtime runs **`composer install`** itself when it bundles your **`api/**`** PHP functions (see `runComposerInstall` in that repo). So **`installCommand`** = `npm ci`, **`buildCommand`** = `npm run build` only; **`vendor/`** is produced during the PHP lambda build, not in the Node build step.
 
 **Serverless constraints**
