@@ -70,9 +70,25 @@ npm ci && npm run build
 
 ## Vercel (optional / advanced)
 
-If you still want **Vercel** in the mix, typical patterns are:
+This repo includes **`vercel.json`**, **`api/index.php`** (forwards to `public/index.php`), and **`.vercelignore`** so Vercel does not upload `vendor` / `node_modules` (they are installed on the build machine).
 
-- Host the **Laravel API** elsewhere (Docker host above) and use Vercel only for a separate frontend, **or**
-- Use a **community** Laravel-on-Vercel setup and accept extra maintenance.
+**In the Vercel dashboard**, set **Output Directory** to `public` (or rely on `vercel.json` — it should match). Clear any old setting that expected **`dist`** (that was causing “No Output Directory named dist”).
 
-For a monolithic Laravel app like this one, hosting the whole app on Fly.io/Railway/Render with Docker is simpler and more reliable.
+**Serverless constraints**
+
+- Use a **hosted database** (e.g. Supabase Postgres). **SQLite on the serverless filesystem is not suitable** for production traffic.
+- Prefer **`SESSION_DRIVER=cookie`** (or a remote DB session store). **`CACHE_STORE=array`** avoids writing cache files to a read-only disk.
+- Set **writable paths** via environment variables (Vercel project → Settings → Environment Variables), for example:
+
+  `VIEW_COMPILED_PATH=/tmp/views`  
+  `APP_CONFIG_CACHE=/tmp/config.php`  
+  `APP_ROUTES_CACHE=/tmp/routes-v7.php`  
+  `APP_SERVICES_CACHE=/tmp/services.php`  
+  `APP_PACKAGES_CACHE=/tmp/packages.php`  
+  `APP_EVENTS_CACHE=/tmp/events.php`  
+
+- Set **`APP_KEY`**, **`APP_URL`** (your `https://…vercel.app` or custom domain), **`APP_ENV=production`**, **`APP_DEBUG=false`**, and all Supabase/DB secrets in the dashboard — **never** commit them.
+
+PHP runtime: **[vercel-community/php](https://github.com/vercel-community/php)** (`vercel-php@0.7.4` in `vercel.json`). If a deploy fails routing, check Vercel’s build logs; older projects sometimes need the **routes** block adjusted.
+
+If you prefer fewer constraints, host the full app on **Fly.io / Railway / Render** with Docker (above) instead.
