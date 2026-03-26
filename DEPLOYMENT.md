@@ -1,5 +1,15 @@
 # Deployment (production)
 
+## Quick checklist (Vercel)
+
+1. **GitHub** connected; latest **`main`** deployed.
+2. **Vercel → Settings → Environment Variables (Production):** `APP_KEY`, `APP_URL`, `APP_ENV=production`, `APP_DEBUG=false`, **`DATABASE_URL`** + `DB_CONNECTION=pgsql` (Supabase), Supabase keys if you use Supabase Auth.
+3. **Run migrations once** against that database: `php artisan migrate --force` (from your PC with the same `DATABASE_URL` in `.env`, or any safe method).
+4. **Redeploy** after changing env vars.
+5. Open **`/up`** — expect **200**. If **500**, see **HTTP 500 on Vercel** below and **Function logs**.
+
+---
+
 This app is a **Laravel** PHP application. **Vercel** is optimized for serverless frontends and Node; running a full Laravel stack on Vercel is possible only via community PHP runtimes and is **not** the path most teams use.
 
 ## Recommended hosting
