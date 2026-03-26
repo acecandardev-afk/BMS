@@ -26,6 +26,11 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 
+# Composer (e.g. Vercel / local installer)
+composer.phar
+composer-setup.php
+
+
 # Local SQLite (never commit real data)
 /database/*.sqlite
 /database/*.sqlite-journal

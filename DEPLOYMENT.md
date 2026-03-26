@@ -74,6 +74,8 @@ This repo includes **`vercel.json`**, **`api/index.php`** (forwards to `public/i
 
 **In the Vercel dashboard**, set **Output Directory** to `public` (or rely on `vercel.json` — it should match). Clear any old setting that expected **`dist`** (that was causing “No Output Directory named dist”).
 
+**Install / build (exit code 127):** The global `composer` binary is often **not** on `PATH` during Vercel’s Node install step, so `vercel.json` uses **`installCommand`: `npm ci`** only, and runs Composer in **`buildCommand`** (try `composer`, else download `composer.phar` via `curl | php`, then `npm run build`). If the build still fails, check the build log: both `composer` and `php` must succeed in the **build** step.
+
 **Serverless constraints**
 
 - Use a **hosted database** (e.g. Supabase Postgres). **SQLite on the serverless filesystem is not suitable** for production traffic.

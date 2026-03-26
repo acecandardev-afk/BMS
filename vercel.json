@@ -2,8 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "framework": null,
-  "installCommand": "composer install --no-dev --optimize-autoloader --no-interaction && npm ci",
-  "buildCommand": "npm run build",
+  "installCommand": "npm ci",
+  "buildCommand": "(composer install --no-dev --optimize-autoloader --no-interaction || (curl -sS https://getcomposer.org/installer | php && php composer.phar install --no-dev --optimize-autoloader --no-interaction)) && npm run build",
   "outputDirectory": "public",
   "functions": {
     "api/index.php": {
