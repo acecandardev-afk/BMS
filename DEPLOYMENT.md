@@ -106,7 +106,7 @@ This repo includes **`vercel.json`**, **`api/index.php`** (forwards to `public/i
 
 - Set **`APP_KEY`**, **`APP_URL`** (your `https://…vercel.app` or custom domain), **`APP_ENV=production`**, **`APP_DEBUG=false`**, and all Supabase/DB secrets in the dashboard — **never** commit them.
 
-PHP runtime: **[vercel-community/php](https://github.com/vercel-community/php)** (`vercel-php@0.7.4` in `vercel.json`). If a deploy fails routing, check Vercel’s build logs; older projects sometimes need the **routes** block adjusted.
+PHP runtime: **[vercel-community/php](https://github.com/vercel-community/php)** (`vercel-php@0.7.4` in `vercel.json`). **`includeFiles`: `public/build/**`** bundles Vite’s `manifest.json` into the PHP lambda. Without it, `@vite` cannot read the manifest from disk and **every** auth page returns **500** (`ViteManifestNotFoundException`). If a deploy fails routing, check Vercel’s build logs; older projects sometimes need the **routes** block adjusted.
 
 **HTTP 500 after the site loads (no Deployment Protection):** The app needs a **working Postgres** connection for **data** (users, residents, etc.). **`vercel.json`** sets **`SESSION_DRIVER=cookie`**, **`CACHE_STORE=array`**, **`QUEUE_CONNECTION=sync`**, **`LOG_CHANNEL=stderr`**, and **`/tmp`** paths for compiled views/config caches — but you **must** still add secrets in **Vercel → Settings → Environment Variables**. **Do not** set `SESSION_DRIVER=database` unless you have run migrations and a stable connection to the **`sessions`** table. If you use Supabase’s **transaction pooler** (port **6543**), keep **`DB_EMULATE_PREPARES`** at the default (**true** in `config/database.php`) or you may see prepared-statement errors.
 

@@ -6,7 +6,7 @@
     "node": ">=20"
   },
     "scripts": {
-        "build": "vite build",
+        "build": "vite build && node -e \"require('fs').accessSync('public/build/manifest.json')\"",
         "dev": "vite"
     },
     "devDependencies": {
