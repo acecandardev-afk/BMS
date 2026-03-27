@@ -91,7 +91,8 @@ This repo includes **`vercel.json`**, **`api/index.php`** (forwards to `public/i
 **Serverless constraints**
 
 - Use a **hosted database** (e.g. Supabase Postgres). **SQLite on the serverless filesystem is not suitable** for production traffic.
-- Prefer **`SESSION_DRIVER=cookie`** (or a remote DB session store). **`CACHE_STORE=array`** avoids writing cache files to a read-only disk.
+- **`SESSION_DRIVER=database`** (set in `vercel.json`) stores sessions in the **`sessions`** table (created by Laravel’s default migration). **Do not use `cookie`** here: Supabase JWTs are too large for browser cookie limits (~4KB) and cause **500** errors after login/signup. Run **`php artisan migrate --force`** so the `sessions` table exists. If you set `SESSION_DRIVER` in the Vercel dashboard, it **overrides** `vercel.json` — use **`database`** or **remove** that variable so the repo default applies.
+- **`CACHE_STORE=array`** avoids writing cache files to a read-only disk.
 - Set **writable paths** via environment variables (Vercel project → Settings → Environment Variables), for example:
 
   `VIEW_COMPILED_PATH=/tmp/views`  
@@ -105,7 +106,7 @@ This repo includes **`vercel.json`**, **`api/index.php`** (forwards to `public/i
 
 PHP runtime: **[vercel-community/php](https://github.com/vercel-community/php)** (`vercel-php@0.7.4` in `vercel.json`). If a deploy fails routing, check Vercel’s build logs; older projects sometimes need the **routes** block adjusted.
 
-**HTTP 500 after the site loads (no Deployment Protection):** The app defaults in `.env` use **`SESSION_DRIVER=database`** and **`CACHE_STORE=database`**, which **require a working database**. On Vercel, **SQLite usually fails** (read-only filesystem). **`vercel.json`** now sets **`SESSION_DRIVER=cookie`**, **`CACHE_STORE=array`**, **`QUEUE_CONNECTION=sync`**, **`LOG_CHANNEL=stderr`**, and **`/tmp`** paths for compiled views/config caches — but you **must** still add these in **Vercel → Settings → Environment Variables**:
+**HTTP 500 after the site loads (no Deployment Protection):** The app needs a **working Postgres** connection on Vercel. **`vercel.json`** sets **`SESSION_DRIVER=database`**, **`CACHE_STORE=array`**, **`QUEUE_CONNECTION=sync`**, **`LOG_CHANNEL=stderr`**, and **`/tmp`** paths for compiled views/config caches — but you **must** still add secrets in **Vercel → Settings → Environment Variables**. **Do not** set `SESSION_DRIVER=cookie` in the dashboard (it overrides `vercel.json` and can bring back cookie-size failures after auth).
 
 | Required | Example |
 |----------|---------|
@@ -116,5 +117,7 @@ PHP runtime: **[vercel-community/php](https://github.com/vercel-community/php)**
 | Database | `DB_CONNECTION=pgsql` and `DATABASE_URL=postgresql://...` (Supabase **Connection string**, **Session** or **Transaction** pooler), **or** individual `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` |
 
 Run **`php artisan migrate --force`** against that database once (from your machine with `DATABASE_URL`, or via a one-off script). Then open **`/up`** — if it returns **200**, Laravel boots; if **500**, check **Vercel → Deployment → Logs** (Function / Runtime) for the stack trace.
+
+**Function memory:** `vercel.json` sets **`memory`: 3008** MB for the PHP lambda (allowed on **Pro**). On **Hobby**, the maximum is **1024** MB — if deployment fails validation, set **`memory`** to **1024** in `vercel.json`. **`api/php.ini`** sets a higher PHP **`memory_limit`** for the runtime.
 
 If you prefer fewer constraints, host the full app on **Fly.io / Railway / Render** with Docker (above) instead.

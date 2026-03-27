@@ -8,7 +8,7 @@
   "env": {
     "LOG_CHANNEL": "stderr",
     "CACHE_STORE": "array",
-    "SESSION_DRIVER": "cookie",
+    "SESSION_DRIVER": "database",
     "QUEUE_CONNECTION": "sync",
     "VIEW_COMPILED_PATH": "/tmp/views",
     "APP_CONFIG_CACHE": "/tmp/config.php",
@@ -20,7 +20,7 @@
   "functions": {
     "api/index.php": {
       "runtime": "vercel-php@0.7.4",
-      "memory": 1024,
+      "memory": 3008,
       "maxDuration": 60
     }
   },
