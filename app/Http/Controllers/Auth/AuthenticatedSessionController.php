@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\ActivityLogService;
 use App\Services\SupabaseAuthService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
@@ -24,13 +26,19 @@ class AuthenticatedSessionController extends Controller
             'password' => ['required'],
         ]);
 
-        if ($supabase->enabled()) {
-            $tokens = $supabase->signInWithPassword($credentials['email'], $credentials['password']);
-            $sid    = $tokens['user']['id'] ?? null;
+        $user = User::query()->where('email', $credentials['email'])->first();
 
-            $user = User::query()
-                ->where('email', $credentials['email'])
-                ->first();
+        if ($supabase->enabled()) {
+            try {
+                $tokens = $supabase->signInWithPassword($credentials['email'], $credentials['password']);
+            } catch (ValidationException $e) {
+                // Seeded / legacy accounts exist only in Laravel (supabase_id null), not in Supabase Auth.
+                if ($user && $user->supabase_id === null && Hash::check($credentials['password'], $user->password)) {
+                    return $this->finishWebLogin($request, $user);
+                }
+
+                throw $e;
+            }
 
             if (! $user) {
                 throw ValidationException::withMessages([
@@ -38,35 +46,48 @@ class AuthenticatedSessionController extends Controller
                 ]);
             }
 
+            $sid = $tokens['user']['id'] ?? null;
             if ($sid) {
                 if ($user->supabase_id === null || $user->supabase_id !== $sid) {
                     $user->forceFill(['supabase_id' => $sid])->save();
                 }
             }
 
-            if (! $user->is_active) {
-                throw ValidationException::withMessages([
-                    'email' => 'This account is inactive. Please contact the barangay office.',
-                ]);
-            }
-
-            Auth::login($user, $request->boolean('remember'));
-            $request->session()->regenerate();
-            // Do not store Supabase JWTs in session (cookie size limit on Vercel).
-        } else {
-            if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-                throw ValidationException::withMessages([
-                    'email' => 'The email or password you entered is incorrect. Please try again.',
-                ]);
-            }
-
-            $request->session()->regenerate();
+            return $this->finishWebLogin($request, $user);
         }
+
+        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+            throw ValidationException::withMessages([
+                'email' => 'The email or password you entered is incorrect. Please try again.',
+            ]);
+        }
+
+        return $this->finishWebLogin($request, Auth::user());
+    }
+
+    /**
+     * Complete login after the user is authenticated (Supabase path, Laravel-only fallback, or Auth::attempt).
+     */
+    private function finishWebLogin(Request $request, User $user): RedirectResponse
+    {
+        if (! $user->is_active) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'This account is inactive. Please contact the barangay office.',
+            ]);
+        }
+
+        if (! Auth::check()) {
+            Auth::login($user, $request->boolean('remember'));
+        }
+
+        $request->session()->regenerate();
 
         ActivityLogService::logAuth(
             'login',
-            Auth::id(),
-            'User logged in: '.Auth::user()->email
+            $user->id,
+            'User logged in: '.$user->email
         );
 
         return redirect()->intended(route('dashboard'));
