@@ -82,6 +82,8 @@ npm ci && npm run build
 
 This repo includes **`vercel.json`**, **`api/index.php`** (forwards to `public/index.php`), and **`.vercelignore`** so Vercel does not upload `vendor` / `node_modules` (they are installed on the build machine).
 
+**Important:** Vercel’s dashboard environment variables are what the PHP runtime sees reliably. Root **`env` in `vercel.json`** is not always applied the same way for community PHP runtimes. The app detects **`VERCEL`** (set automatically by the platform) and uses **stderr** logging, **array** cache, **sync** queue, and **`/tmp/views`** for compiled Blade unless you override via env — so you do not have to duplicate those in the dashboard if you only set **`APP_*`**, **`DATABASE_URL`**, and **`DB_CONNECTION`**.
+
 **In the Vercel dashboard**, set **Output Directory** to `public` (or rely on `vercel.json` — it should match). Clear any old setting that expected **`dist`** (that was causing “No Output Directory named dist”).
 
 **“Authenticated” then the browser downloads a file:** Vercel **Deployment Protection** shows the login screen first; that is normal if protection is enabled. If the **next** page **downloads** instead of showing HTML, the usual cause was **`routes` with `{ "handle": "filesystem" }`**: Vercel then serves `public/index.php` as a **static file**, so PHP is not executed. This repo uses **explicit** routes for `/build/*` and static files, then sends everything else to **`/api/index.php`** so Laravel runs. To remove the extra “Authenticated” step for public visitors, open **Project → Settings → Deployment Protection** and adjust (e.g. disable for Production or only protect Preview).
