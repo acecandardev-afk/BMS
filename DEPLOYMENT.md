@@ -93,7 +93,7 @@ This repo includes **`vercel.json`**, **`api/index.php`** (forwards to `public/i
 **Serverless constraints**
 
 - Use a **hosted database** (e.g. Supabase Postgres). **SQLite on the serverless filesystem is not suitable** for production traffic.
-- **`SESSION_DRIVER=database`** (set in `vercel.json`) stores sessions in the **`sessions`** table (created by Laravel’s default migration). **Do not use `cookie`** here: Supabase JWTs are too large for browser cookie limits (~4KB) and cause **500** errors after login/signup. Run **`php artisan migrate --force`** so the `sessions` table exists. If you set `SESSION_DRIVER` in the Vercel dashboard, it **overrides** `vercel.json` — use **`database`** or **remove** that variable so the repo default applies.
+- **`SESSION_DRIVER=cookie`** (default on Vercel via `config/session.php` + `vercel.json`) avoids writing sessions to Postgres on every request (common source of **500** on `/register` when the pooler or `sessions` table misbehaves). **Do not store Supabase JWTs in the Laravel session** — they are too large for the encrypted cookie. Remote Supabase logout is best-effort without a stored access token. You can set **`SESSION_DRIVER=database`** in the dashboard if you prefer DB sessions and have a reliable **`sessions`** table.
 - **`CACHE_STORE=array`** avoids writing cache files to a read-only disk.
 - Set **writable paths** via environment variables (Vercel project → Settings → Environment Variables), for example:
 
@@ -108,7 +108,7 @@ This repo includes **`vercel.json`**, **`api/index.php`** (forwards to `public/i
 
 PHP runtime: **[vercel-community/php](https://github.com/vercel-community/php)** (`vercel-php@0.7.4` in `vercel.json`). If a deploy fails routing, check Vercel’s build logs; older projects sometimes need the **routes** block adjusted.
 
-**HTTP 500 after the site loads (no Deployment Protection):** The app needs a **working Postgres** connection on Vercel. **`vercel.json`** sets **`SESSION_DRIVER=database`**, **`CACHE_STORE=array`**, **`QUEUE_CONNECTION=sync`**, **`LOG_CHANNEL=stderr`**, and **`/tmp`** paths for compiled views/config caches — but you **must** still add secrets in **Vercel → Settings → Environment Variables**. **Do not** set `SESSION_DRIVER=cookie` in the dashboard (it overrides `vercel.json` and can bring back cookie-size failures after auth).
+**HTTP 500 after the site loads (no Deployment Protection):** The app needs a **working Postgres** connection for **data** (users, residents, etc.). **`vercel.json`** sets **`SESSION_DRIVER=cookie`**, **`CACHE_STORE=array`**, **`QUEUE_CONNECTION=sync`**, **`LOG_CHANNEL=stderr`**, and **`/tmp`** paths for compiled views/config caches — but you **must** still add secrets in **Vercel → Settings → Environment Variables**. **Do not** set `SESSION_DRIVER=database` unless you have run migrations and a stable connection to the **`sessions`** table. If you use Supabase’s **transaction pooler** (port **6543**), keep **`DB_EMULATE_PREPARES`** at the default (**true** in `config/database.php`) or you may see prepared-statement errors.
 
 | Required | Example |
 |----------|---------|

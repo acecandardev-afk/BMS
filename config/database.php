@@ -96,6 +96,10 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
+            // Supabase pooler (PgBouncer, port 6543) requires emulated prepares; set DB_EMULATE_PREPARES=false to disable.
+            'options' => extension_loaded('pdo_pgsql') ? [
+                \PDO::ATTR_EMULATE_PREPARES => filter_var(env('DB_EMULATE_PREPARES', 'true'), FILTER_VALIDATE_BOOLEAN),
+            ] : [],
         ],
 
         'sqlsrv' => [

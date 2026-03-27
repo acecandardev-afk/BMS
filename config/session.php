@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Str;
 
+$isVercel = getenv('VERCEL') !== false && getenv('VERCEL') !== '';
+
 return [
 
     /*
@@ -18,7 +20,9 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'database'),
+    // On Vercel, default to cookie: DB sessions touch Postgres on every request (fragile with poolers);
+    // do not store Supabase JWTs in session (keeps the cookie small). Override with SESSION_DRIVER=database if needed.
+    'driver' => env('SESSION_DRIVER', $isVercel ? 'cookie' : 'database'),
 
     /*
     |--------------------------------------------------------------------------

@@ -72,13 +72,7 @@ class RegisteredUserController extends Controller
 
         $request->session()->regenerate();
 
-        // Cookie sessions must stay under ~4KB; refresh_token is unused server-side (only access_token is needed for logout).
-        if ($result['tokens'] !== null) {
-            $tokens = $result['tokens'];
-            if ($tokens['access_token'] !== '') {
-                $request->session()->put('supabase_access_token', $tokens['access_token']);
-            }
-        }
+        // Do not store Supabase JWTs in session: cookie driver is size-limited (~4KB) and breaks requests.
 
         return redirect()->route('dashboard')
             ->with('success', 'Welcome! Your account has been created.');

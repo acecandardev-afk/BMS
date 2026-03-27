@@ -8,7 +8,7 @@
   "env": {
     "LOG_CHANNEL": "stderr",
     "CACHE_STORE": "array",
-    "SESSION_DRIVER": "database",
+    "SESSION_DRIVER": "cookie",
     "QUEUE_CONNECTION": "sync",
     "VIEW_COMPILED_PATH": "/tmp/views",
     "APP_CONFIG_CACHE": "/tmp/config.php",

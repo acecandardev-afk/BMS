@@ -52,8 +52,7 @@ class AuthenticatedSessionController extends Controller
 
             Auth::login($user, $request->boolean('remember'));
             $request->session()->regenerate();
-            // Do not store refresh_token: cookie session size is limited (~4KB); it is not read anywhere.
-            $request->session()->put('supabase_access_token', $tokens['access_token']);
+            // Do not store Supabase JWTs in session (cookie size limit on Vercel).
         } else {
             if (! Auth::attempt($credentials, $request->boolean('remember'))) {
                 throw ValidationException::withMessages([
@@ -75,8 +74,6 @@ class AuthenticatedSessionController extends Controller
 
     public function destroy(Request $request, SupabaseAuthService $supabase)
     {
-        $token = $request->session()->get('supabase_access_token');
-
         ActivityLogService::logAuth(
             'logout',
             Auth::id(),
@@ -86,7 +83,7 @@ class AuthenticatedSessionController extends Controller
         Auth::logout();
 
         if ($supabase->enabled()) {
-            $supabase->signOut(is_string($token) ? $token : null);
+            $supabase->signOut(null);
         }
 
         $request->session()->invalidate();
