@@ -52,8 +52,8 @@ class AuthenticatedSessionController extends Controller
 
             Auth::login($user, $request->boolean('remember'));
             $request->session()->regenerate();
+            // Do not store refresh_token: cookie session size is limited (~4KB); it is not read anywhere.
             $request->session()->put('supabase_access_token', $tokens['access_token']);
-            $request->session()->put('supabase_refresh_token', $tokens['refresh_token']);
         } else {
             if (! Auth::attempt($credentials, $request->boolean('remember'))) {
                 throw ValidationException::withMessages([

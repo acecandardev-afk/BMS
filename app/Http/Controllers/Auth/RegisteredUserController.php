@@ -72,13 +72,11 @@ class RegisteredUserController extends Controller
 
         $request->session()->regenerate();
 
+        // Cookie sessions must stay under ~4KB; refresh_token is unused server-side (only access_token is needed for logout).
         if ($result['tokens'] !== null) {
             $tokens = $result['tokens'];
             if ($tokens['access_token'] !== '') {
                 $request->session()->put('supabase_access_token', $tokens['access_token']);
-            }
-            if ($tokens['refresh_token'] !== '') {
-                $request->session()->put('supabase_refresh_token', $tokens['refresh_token']);
             }
         }
 
