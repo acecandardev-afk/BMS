@@ -9,12 +9,24 @@ class CertificateRequestPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole([User::ROLE_ADMIN, User::ROLE_STAFF, User::ROLE_SIGNATORY]);
+        return $user->hasAnyRole([
+            User::ROLE_ADMIN,
+            User::ROLE_STAFF,
+            User::ROLE_SIGNATORY,
+            User::ROLE_SELLER,
+            User::ROLE_ARTISAN,
+        ]);
     }
 
     public function view(User $user, CertificateRequest $request): bool
     {
-        if ($user->hasAnyRole([User::ROLE_ADMIN, User::ROLE_STAFF, User::ROLE_SIGNATORY])) {
+        if ($user->hasAnyRole([
+            User::ROLE_ADMIN,
+            User::ROLE_STAFF,
+            User::ROLE_SIGNATORY,
+            User::ROLE_SELLER,
+            User::ROLE_ARTISAN,
+        ])) {
             return true;
         }
         return $user->isResident() && $user->resident?->id === $request->resident_id;
@@ -38,25 +50,25 @@ class CertificateRequestPolicy
 
     public function approve(User $user, CertificateRequest $request): bool
     {
-        return $user->hasAnyRole([User::ROLE_ADMIN, User::ROLE_SIGNATORY])
+        return $user->hasAnyRole([User::ROLE_ADMIN, User::ROLE_SIGNATORY, User::ROLE_SELLER, User::ROLE_ARTISAN])
             && $request->status === CertificateRequest::STATUS_PENDING;
     }
 
     public function reject(User $user, CertificateRequest $request): bool
     {
-        return $user->hasAnyRole([User::ROLE_ADMIN, User::ROLE_SIGNATORY])
+        return $user->hasAnyRole([User::ROLE_ADMIN, User::ROLE_SIGNATORY, User::ROLE_SELLER, User::ROLE_ARTISAN])
             && $request->status === CertificateRequest::STATUS_PENDING;
     }
 
     public function release(User $user, CertificateRequest $request): bool
     {
-        return $user->hasAnyRole([User::ROLE_ADMIN, User::ROLE_STAFF])
+        return $user->hasAnyRole([User::ROLE_ADMIN, User::ROLE_STAFF, User::ROLE_SELLER, User::ROLE_ARTISAN])
             && $request->status === CertificateRequest::STATUS_APPROVED;
     }
 
     public function print(User $user, CertificateRequest $request): bool
     {
-        return $user->hasAnyRole([User::ROLE_ADMIN, User::ROLE_STAFF])
+        return $user->hasAnyRole([User::ROLE_ADMIN, User::ROLE_STAFF, User::ROLE_SELLER, User::ROLE_ARTISAN])
             && in_array($request->status, [
                 CertificateRequest::STATUS_APPROVED,
                 CertificateRequest::STATUS_RELEASED,

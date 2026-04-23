@@ -15,12 +15,16 @@ class User extends Authenticatable
     const ROLE_STAFF     = 'staff';
     const ROLE_SIGNATORY = 'signatory';
     const ROLE_RESIDENT  = 'resident';
+    const ROLE_SELLER    = 'seller';
+    const ROLE_ARTISAN   = 'artisan';
 
     const ROLES = [
         self::ROLE_ADMIN,
         self::ROLE_STAFF,
         self::ROLE_SIGNATORY,
         self::ROLE_RESIDENT,
+        self::ROLE_SELLER,
+        self::ROLE_ARTISAN,
     ];
 
     protected $fillable = [
@@ -63,6 +67,16 @@ class User extends Authenticatable
     public function isResident(): bool
     {
         return $this->role === self::ROLE_RESIDENT;
+    }
+
+    public function isSeller(): bool
+    {
+        return $this->role === self::ROLE_SELLER;
+    }
+
+    public function isArtisan(): bool
+    {
+        return $this->role === self::ROLE_ARTISAN;
     }
 
     public function hasRole(string $role): bool
@@ -157,7 +171,13 @@ class User extends Authenticatable
 
     public function isOfficeUser(): bool
     {
-        return $this->hasAnyRole([self::ROLE_ADMIN, self::ROLE_STAFF, self::ROLE_SIGNATORY]);
+        return $this->hasAnyRole([
+            self::ROLE_ADMIN,
+            self::ROLE_STAFF,
+            self::ROLE_SIGNATORY,
+            self::ROLE_SELLER,
+            self::ROLE_ARTISAN,
+        ]);
     }
 
     /**
@@ -165,7 +185,7 @@ class User extends Authenticatable
      */
     public function canChatWith(User $other): bool
     {
-        if ($this->id === $other->id || ! $other->is_active || ! $this->is_active) {
+        if ($this->id === $other->id) {
             return false;
         }
         return true;
