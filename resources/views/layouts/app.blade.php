@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0f5c4a">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ asset('cantupa-logo.png') }}" type="image/png">
     <title>{{ config('app.name', 'Barangay Cantupa') }} — @yield('title', 'Dashboard')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -20,7 +20,7 @@
             <div class="bc-sidebar__brand p-3 p-lg-4 border-bottom border-secondary border-opacity-25">
                 <a href="{{ route('dashboard') }}" class="text-decoration-none d-flex align-items-center gap-3">
                     <div class="bc-sidebar__logo rounded-3 d-flex align-items-center justify-content-center flex-shrink-0">
-                        <x-barangay-mark class="text-white" :size="24" />
+                        <img src="{{ asset('cantupa-logo.png') }}" alt="Logo" width="24" height="24" style="object-fit:contain;">
                     </div>
                     <div class="min-w-0">
                         <p class="fw-semibold mb-0 small text-white text-truncate">Barangay Cantupa</p>
@@ -29,21 +29,26 @@
                 </a>
             </div>
 
+            @php
+                $newCertCount = 0;
+                if (auth()->check() && auth()->user()->hasAnyRole(['admin','staff','signatory'])) {
+                    $lastViewed = session('cert_requests_last_viewed')
+                        ? \Carbon\Carbon::parse(session('cert_requests_last_viewed'))
+                        : now()->subYear();
+                    $newCertCount = \App\Models\CertificateRequest::pending()
+                        ->where('created_at', '>', $lastViewed)
+                        ->count();
+                }
+            @endphp
             <nav class="bc-sidebar__nav flex-grow-1 overflow-auto p-3">
                 <a href="{{ route('dashboard') }}" class="bc-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                     <span>Dashboard</span>
                 </a>
 
-                <a href="{{ route('events.index') }}" class="bc-nav-link {{ request()->routeIs('events.*') ? 'active' : '' }}">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
-                    <span>Events</span>
-                </a>
-
-                <a href="{{ route('messages.index') }}" class="bc-nav-link {{ request()->routeIs('messages.*') ? 'active' : '' }}">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                    <span class="flex-grow-1">Messages</span>
-                    <span class="badge rounded-pill bc-chat-nav-badge" x-show="chatUnread > 0" x-cloak x-text="chatUnread > 99 ? '99+' : chatUnread"></span>
+                <a href="{{ route('about') }}" class="bc-nav-link {{ request()->routeIs('about') ? 'active' : '' }}">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>About</span>
                 </a>
 
                 @can('manage-residents')
@@ -60,7 +65,10 @@
                 @can('manage-certificates')
                 <a href="{{ route('certificate-requests.index') }}" class="bc-nav-link {{ request()->routeIs('certificate-requests.*') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    <span>Certificates</span>
+                    <span class="flex-grow-1">Certificate Requests</span>
+                    @if($newCertCount > 0)
+                    <span class="bc-nav-badge">{{ $newCertCount > 99 ? '99+' : $newCertCount }}</span>
+                    @endif
                 </a>
                 @endcan
 
@@ -68,7 +76,10 @@
                 @cannot('manage-certificates')
                 <a href="{{ route('certificate-requests.index') }}" class="bc-nav-link {{ request()->routeIs('certificate-requests.*') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span>Approvals</span>
+                    <span class="flex-grow-1">Approvals</span>
+                    @if($newCertCount > 0)
+                    <span class="bc-nav-badge">{{ $newCertCount > 99 ? '99+' : $newCertCount }}</span>
+                    @endif
                 </a>
                 @endcannot
                 @endcan
@@ -86,12 +97,10 @@
                 @endif
                 @endauth
 
-                @can('manage-blotter')
-                <a href="{{ route('blotter.index') }}" class="bc-nav-link {{ request()->routeIs('blotter.*') ? 'active' : '' }}">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                    <span>Blotter</span>
+                <a href="{{ route('messages.index') }}" class="bc-nav-link {{ request()->routeIs('messages.*') ? 'active' : '' }}">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h8m-8 4h5m6 5l-3.5-2H6a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2z"/></svg>
+                    <span>Messages</span>
                 </a>
-                @endcan
 
                 <a href="{{ route('legislation.index') }}" class="bc-nav-link {{ request()->routeIs('legislation.*') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/></svg>
@@ -103,12 +112,22 @@
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                     <span>Reports</span>
                 </a>
+                @if(auth()->user()->isAdmin())
+                <a href="{{ route('payments.index') }}" class="bc-nav-link {{ request()->routeIs('payments.*') ? 'active' : '' }}">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+                    <span>Payments</span>
+                </a>
+                @endif
                 @endcan
 
                 @can('manage-users')
                 <a href="{{ route('users.index') }}" class="bc-nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                     <span>Users</span>
+                </a>
+                <a href="{{ route('archives.index') }}" class="bc-nav-link {{ request()->routeIs('archives.*') ? 'active' : '' }}">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                    <span>Archived</span>
                 </a>
                 <a href="{{ route('activity-logs.index') }}" class="bc-nav-link {{ request()->routeIs('activity-logs.*') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
@@ -220,5 +239,7 @@
     @include('partials.confirm-modal')
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    @stack('page-scripts')
 </body>
 </html>

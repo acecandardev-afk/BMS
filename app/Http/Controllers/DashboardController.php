@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BlotterRecord;
 use App\Models\CertificateRequest;
-use App\Models\ChatMessage;
 use App\Models\Resident;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -23,12 +21,7 @@ class DashboardController extends Controller
             default     => [],
         };
 
-        $unreadMessages = ChatMessage::query()
-            ->where('receiver_id', $user->id)
-            ->whereNull('read_at')
-            ->count();
-
-        return view('dashboard', compact('data', 'unreadMessages'));
+        return view('dashboard', compact('data'));
     }
 
     private function adminStats(): array
@@ -37,18 +30,17 @@ class DashboardController extends Controller
             'total_residents'   => Resident::count(),
             'pending_requests'  => CertificateRequest::pending()->count(),
             'approved_requests' => CertificateRequest::approved()->count(),
-            'open_blotter'      => BlotterRecord::open()->count(),
+            'fees_collected'    => CertificateRequest::whereIn('status', ['approved', 'shipped', 'on_delivery', 'released'])->sum('fee'),
         ];
     }
 
     private function staffStats(): array
     {
         return [
-            'total_residents'         => Resident::count(),
-            'pending_requests'        => CertificateRequest::pending()->count(),
-            'approved_requests'       => CertificateRequest::approved()->count(),
-            'total_requests'          => CertificateRequest::count(),
-            'open_blotter'            => BlotterRecord::open()->count(),
+            'total_residents'  => Resident::count(),
+            'pending_requests' => CertificateRequest::pending()->count(),
+            'approved_requests'=> CertificateRequest::approved()->count(),
+            'total_requests'   => CertificateRequest::count(),
         ];
     }
 

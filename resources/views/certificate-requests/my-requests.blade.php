@@ -6,6 +6,19 @@
 
 <div class="py-4">
 
+    @if(!empty($notifications) && $notifications->isNotEmpty())
+    <div class="card bc-card p-3 mb-4">
+        <p class="small fw-semibold text-muted mb-2">Recent Status Notifications</p>
+        <div class="d-flex flex-column gap-2">
+            @foreach($notifications as $notification)
+            <a href="{{ $notification->data['url'] ?? route('my.requests') }}" class="small text-decoration-none">
+                {{ $notification->data['message'] ?? 'Your request status was updated.' }}
+            </a>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
     <!-- Header -->
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
@@ -52,7 +65,15 @@
             </div>
             <div class="d-flex align-items-center gap-2">
                 <x-badge status="approved"/>
-                <span>Ready for release</span>
+                <span>Approved by seller/staff</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <x-badge status="shipped"/>
+                <span>Shipped</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <x-badge status="on_delivery"/>
+                <span>On delivery</span>
             </div>
             <div class="d-flex align-items-center gap-2">
                 <x-badge status="released"/>
@@ -86,6 +107,12 @@
                     @if($req->released_at)
                         <span class="text-primary">Released: {{ $req->released_at->format('M d, Y') }}</span>
                     @endif
+                    @if($req->shipped_at)
+                        <span class="text-info">Shipped: {{ $req->shipped_at->format('M d, Y h:i A') }}</span>
+                    @endif
+                    @if($req->on_delivery_at)
+                        <span class="text-primary">On delivery: {{ $req->on_delivery_at->format('M d, Y h:i A') }}</span>
+                    @endif
                     @if($req->or_number)
                         <span>OR#: {{ $req->or_number }}</span>
                     @endif
@@ -116,13 +143,13 @@
         <!-- Progress Bar -->
         <div class="mt-4">
             @php
-                $steps = ['pending' => 1, 'approved' => 2, 'released' => 3, 'rejected' => 0];
+                $steps = ['pending' => 1, 'approved' => 2, 'shipped' => 3, 'on_delivery' => 4, 'released' => 5, 'rejected' => 0];
                 $current = $steps[$req->status] ?? 0;
             @endphp
             @if($req->status !== 'rejected')
             <div class="d-flex align-items-center gap-2">
-                @foreach(['Submitted', 'Approved', 'Released'] as $i => $step)
-                <div class="d-flex align-items-center {{ $i < 2 ? 'flex-grow-1' : '' }}">
+                @foreach(['Submitted', 'Approved', 'Shipped', 'On delivery', 'Released'] as $i => $step)
+                <div class="d-flex align-items-center {{ $i < 4 ? 'flex-grow-1' : '' }}">
                     <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 small fw-bold
                                 {{ $current > $i ? 'bg-primary text-white' : ($current === $i + 1 ? 'bg-primary bg-opacity-25 text-primary' : 'bg-light text-muted') }}"
                          style="width: 1.5rem; height: 1.5rem;">
@@ -131,7 +158,7 @@
                     <p class="small mb-0 ms-1 {{ $current > $i ? 'text-primary fw-medium' : 'text-muted' }}">
                         {{ $step }}
                     </p>
-                    @if($i < 2)
+                    @if($i < 4)
                     <div class="flex-grow-1 mx-2" style="height: 2px; background: {{ $current > $i + 1 ? 'var(--bs-primary)' : '#dee2e6' }};"></div>
                     @endif
                 </div>

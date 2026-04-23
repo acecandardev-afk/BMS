@@ -14,10 +14,14 @@ class CertificateRequest extends Model
     const STATUS_APPROVED = 'approved';
     const STATUS_REJECTED = 'rejected';
     const STATUS_RELEASED = 'released';
+    const STATUS_SHIPPED = 'shipped';
+    const STATUS_ON_DELIVERY = 'on_delivery';
 
     const STATUSES = [
         self::STATUS_PENDING,
         self::STATUS_APPROVED,
+        self::STATUS_SHIPPED,
+        self::STATUS_ON_DELIVERY,
         self::STATUS_REJECTED,
         self::STATUS_RELEASED,
     ];
@@ -57,6 +61,9 @@ class CertificateRequest extends Model
         'requirements_checklist',
         'remarks',
         'approved_at',
+        'shipped_at',
+        'on_delivery_at',
+        'ship_delay_minutes',
         'rejected_at',
         'released_at',
         'printed_at',
@@ -66,6 +73,9 @@ class CertificateRequest extends Model
         'requirements_checklist' => 'array',
         'fee'                    => 'decimal:2',
         'approved_at'            => 'datetime',
+        'shipped_at'             => 'datetime',
+        'on_delivery_at'         => 'datetime',
+        'ship_delay_minutes'     => 'integer',
         'rejected_at'            => 'datetime',
         'released_at'            => 'datetime',
         'printed_at'             => 'datetime',

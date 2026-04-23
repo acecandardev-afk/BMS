@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CertificateRequest;
 use App\Models\Resident;
+use App\Notifications\CertificateStatusUpdatedNotification;
 use App\Services\ActivityLogService;
 use App\Services\CertificateService;
 use Illuminate\Http\Request;
@@ -43,6 +44,9 @@ class CertificateRequestController extends Controller
         $types    = CertificateRequest::TYPES;
         $statuses = CertificateRequest::STATUSES;
 
+        // Mark all pending requests as "seen" — resets the sidebar notification counter
+        session(['cert_requests_last_viewed' => now()->toDateTimeString()]);
+
         return view('certificate-requests.index', compact('requests', 'types', 'statuses'));
     }
 
@@ -75,9 +79,10 @@ class CertificateRequestController extends Controller
             'resident_id'   => $resident->id,
             'requested_by'  => Auth::id(),
             'status'        => CertificateRequest::STATUS_PENDING,
+            'fee'           => 25.00,
         ]);
 
-        ActivityLogService::logCreate($certRequest, "Certificate request created: {$certRequest->type_name} for {$resident->full_name}");
+        ActivityLogService::logCreate($certRequest, "Certificate request created: {$certRequest->type_name} for {$resident->full_name} — Fee: ₱25.00");
 
         return redirect()->route('my.requests')
             ->with('success', 'Your request has been submitted. We will notify you once it is processed.');
@@ -102,8 +107,14 @@ class CertificateRequestController extends Controller
             'status'       => CertificateRequest::STATUS_APPROVED,
             'signatory_id' => Auth::id(),
             'approved_at'  => now(),
+            'ship_delay_minutes' => random_int(5, 10),
             'remarks'      => $request->remarks,
         ]);
+
+        $recipient = $certificateRequest->requester ?? $certificateRequest->resident?->user;
+        if ($recipient) {
+            $recipient->notify(new CertificateStatusUpdatedNotification($certificateRequest));
+        }
 
         ActivityLogService::logApprove($certificateRequest, "Approved certificate request #{$certificateRequest->id}: {$certificateRequest->type_name}");
 
@@ -170,7 +181,18 @@ class CertificateRequestController extends Controller
 
         $requests = $query->paginate(10)->withQueryString();
         $statuses = CertificateRequest::STATUSES;
+        $notifications = Auth::user()->unreadNotifications()
+            ->where('type', CertificateStatusUpdatedNotification::class)
+            ->latest()
+            ->take(8)
+            ->get();
 
-        return view('certificate-requests.my-requests', compact('requests', 'statuses'));
+        if ($notifications->isNotEmpty()) {
+            Auth::user()->unreadNotifications()
+                ->whereIn('id', $notifications->pluck('id'))
+                ->update(['read_at' => now()]);
+        }
+
+        return view('certificate-requests.my-requests', compact('requests', 'statuses', 'notifications'));
     }
 }

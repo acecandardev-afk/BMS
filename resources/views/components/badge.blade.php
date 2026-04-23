@@ -7,6 +7,8 @@
 $map = [
     'pending'   => 'bg-warning bg-opacity-25 text-dark',
     'approved'  => 'bg-success bg-opacity-25 text-success',
+    'shipped'   => 'bg-info bg-opacity-25 text-info',
+    'on_delivery' => 'bg-primary bg-opacity-25 text-primary',
     'rejected'  => 'bg-danger bg-opacity-25 text-danger',
     'released'  => 'bg-primary bg-opacity-25 text-primary',
     'open'      => 'bg-warning bg-opacity-25 text-dark',

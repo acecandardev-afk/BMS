@@ -165,19 +165,10 @@ class User extends Authenticatable
      */
     public function canChatWith(User $other): bool
     {
-        if ($this->id === $other->id || ! $other->is_active) {
+        if ($this->id === $other->id || ! $other->is_active || ! $this->is_active) {
             return false;
         }
-
-        if ($this->isOfficeUser()) {
-            return true;
-        }
-
-        if ($this->isResident()) {
-            return $other->isOfficeUser();
-        }
-
-        return false;
+        return true;
     }
 
     /**
