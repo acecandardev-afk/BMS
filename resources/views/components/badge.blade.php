@@ -22,8 +22,6 @@ $map = [
     'admin'     => 'bg-primary bg-opacity-25 text-primary',
     'staff'     => 'bg-info bg-opacity-25 text-info',
     'signatory' => 'bg-primary bg-opacity-25 text-primary',
-    'seller'    => 'bg-info bg-opacity-25 text-info',
-    'artisan'   => 'bg-warning bg-opacity-25 text-dark',
     'resident'  => 'bg-secondary bg-opacity-25 text-secondary',
     'default'   => 'bg-secondary bg-opacity-25 text-secondary',
 ];

@@ -12,7 +12,11 @@
         </a>
         <h2 class="h5 mt-2 mb-1 bc-page-title">Who would you like to message?</h2>
         <p class="small mb-0 bc-page-subtitle">
-            You can message any active user in the system.
+            @if(auth()->user()->isOfficeUser())
+                You can message any active user in the system.
+            @else
+                You can message barangay administrators, staff, or signatories.
+            @endif
         </p>
     </div>
 

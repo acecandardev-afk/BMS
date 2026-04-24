@@ -103,8 +103,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('reports/certificates', [ReportController::class, 'certificates'])->name('reports.certificates');
     });
 
-    // --- Admin, Staff, Signatory, Seller, Artisan ---
-    Route::middleware('role:admin,staff,signatory,seller,artisan')->group(function () {
+    // --- Admin, Staff & Signatory ---
+    Route::middleware('role:admin,staff,signatory')->group(function () {
         Route::get('certificate-requests', [CertificateRequestController::class, 'index'])->name('certificate-requests.index');
         Route::get('certificate-requests/{certificateRequest}', [CertificateRequestController::class, 'show'])->name('certificate-requests.show');
         Route::patch('certificate-requests/{certificateRequest}/approve', [CertificateRequestController::class, 'approve'])->name('certificate-requests.approve');

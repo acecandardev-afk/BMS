@@ -71,6 +71,12 @@ class ChatController extends Controller
             ->where('id', '!=', $user->id)
             ->where('is_active', true);
 
+        if ($user->isOfficeUser()) {
+            // office can message anyone
+        } else {
+            $query->whereIn('role', [User::ROLE_ADMIN, User::ROLE_STAFF, User::ROLE_SIGNATORY]);
+        }
+
         if ($request->filled('search')) {
             $s = '%'.$request->input('search').'%';
             $query->where(function ($q) use ($s) {
@@ -121,7 +127,7 @@ class ChatController extends Controller
         if (! $auth->canChatWith($user) || ! $user->is_active) {
             return redirect()
                 ->route('messages.index')
-                ->with('error', 'You are not able to send a message to that person right now.');
+                ->with('error', 'You are not able to send a message to that person. Please choose someone from your contacts list.');
         }
 
         $validated = $request->validate([

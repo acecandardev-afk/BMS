@@ -65,7 +65,7 @@
             </div>
             <div class="d-flex align-items-center gap-2">
                 <x-badge status="approved"/>
-                <span>Approved by seller/staff</span>
+                <span>Ready for release</span>
             </div>
             <div class="d-flex align-items-center gap-2">
                 <x-badge status="shipped"/>
